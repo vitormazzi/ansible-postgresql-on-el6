@@ -27,9 +27,14 @@
   when: postgresql_cluster_symlink_src|length > 0
 
 - name: "Stage 2: initialize new postgresql cluster"
-  become: yes
-  become_user: "{{ postgresql_admin_user }}"
+  stat: path=/var/lib/pgsql/9.5/data/pg_hba.conf
+  register: tmp_pg_hba
+
+- name: "Stage 2: initialize new postgresql cluster"
+  sudo: yes
+  sudo_user: "{{ postgresql_admin_user }}"
   command: "/usr/pgsql-{{ postgresql_version }}/bin/initdb -D /var/lib/pgsql/{{ postgresql_version }}/data"
+  when: tmp_pg_hba.stat.exists == False
 
 - name: "Stage 2: configure pg_hba.conf"
   template:
